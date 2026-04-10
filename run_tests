@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Scan the project for *.test.gd files and run every test_* method in each.
+# Exits 0 on all-pass, 1 on any failure, 2 on setup error.
+#
+# Override GODOT_PATH env var to point at a different Godot executable.
+
+set -euo pipefail
+
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Default Godot locations on this machine. Prefer the _console variant on
+# Windows for reliable stdout.
+DEFAULT_CONSOLE="/c/Users/delmi/Downloads/Godot_v4.6.2-stable_win64.exe/Godot_v4.6.2-stable_win64_console.exe"
+DEFAULT_GUI="/c/Users/delmi/Downloads/Godot_v4.6.2-stable_win64.exe/Godot_v4.6.2-stable_win64.exe"
+
+GODOT="${GODOT_PATH:-}"
+if [[ -z "$GODOT" ]]; then
+  if [[ -f "$DEFAULT_CONSOLE" ]]; then
+    GODOT="$DEFAULT_CONSOLE"
+  elif [[ -f "$DEFAULT_GUI" ]]; then
+    GODOT="$DEFAULT_GUI"
+  fi
+fi
+
+if [[ -z "$GODOT" || ! -f "$GODOT" ]]; then
+  echo "run_tests: Godot executable not found." >&2
+  echo "  Tried: $DEFAULT_CONSOLE" >&2
+  echo "         $DEFAULT_GUI" >&2
+  echo "  Override with GODOT_PATH=<path/to/godot>." >&2
+  exit 2
+fi
+
+echo "run_tests: using Godot at $GODOT"
+echo "run_tests: project $PROJECT_DIR"
+echo ""
+
+"$GODOT" --headless --path "$PROJECT_DIR" --script res://tests/test_runner.gd

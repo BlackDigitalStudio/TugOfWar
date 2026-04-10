@@ -1,0 +1,166 @@
+[gd_scene load_steps=18 format=3 uid="uid://bto1r1r1g1r1r"]
+
+[ext_resource type="Script" path="res://scripts/camera/camera_rig.gd" id="1_camera_rig"]
+[ext_resource type="Script" path="res://scenes/ground.gd" id="2_ground"]
+[ext_resource type="Script" path="res://scripts/buildings/barracks.gd" id="3_barracks"]
+[ext_resource type="Script" path="res://scripts/buildings/tower.gd" id="4_tower"]
+[ext_resource type="Shader" path="res://shaders/ground.gdshader" id="5_ground_shader"]
+[ext_resource type="Script" path="res://scripts/debug/debug_orbit.gd" id="6_debug_orbit"]
+[ext_resource type="Script" path="res://scripts/ui/build_bar.gd" id="7_build_bar"]
+[ext_resource type="Script" path="res://scripts/ui/build_pill.gd" id="8_build_pill"]
+[ext_resource type="Script" path="res://scripts/placement/placement_controller.gd" id="9_placement"]
+[ext_resource type="Shader" path="res://shaders/ground_contour.gdshader" id="10_contour_shader"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(200, 200)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ground"]
+shader = ExtResource("5_ground_shader")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_contour"]
+shader = ExtResource("10_contour_shader")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_barracks"]
+top_radius = 0.9
+bottom_radius = 0.9
+height = 1.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_tower"]
+top_radius = 0.5
+bottom_radius = 0.5
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_player"]
+albedo_color = Color(0.35, 0.5, 0.9, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy"]
+albedo_color = Color(0.9, 0.35, 0.35, 1)
+roughness = 0.7
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 1
+background_color = Color(0.95, 0.95, 0.95, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.22
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 20, 0)
+light_energy = 1.3
+shadow_enabled = true
+shadow_blur = 0.6
+directional_shadow_max_distance = 25.0
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_ground")
+mesh = SubResource("PlaneMesh_ground")
+script = ExtResource("2_ground")
+
+[node name="ContourOverlay" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+material_override = SubResource("ShaderMaterial_contour")
+mesh = SubResource("PlaneMesh_ground")
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("1_camera_rig")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 13, 7.5)
+projection = 1
+size = 14.0
+near = 1.0
+far = 60.0
+
+[node name="PlayerBarracks" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 8)
+script = ExtResource("3_barracks")
+team = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="PlayerBarracks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("CylinderMesh_barracks")
+material_override = SubResource("StandardMaterial3D_player")
+
+[node name="PlayerTower" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 5)
+script = ExtResource("4_tower")
+team = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="PlayerTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("CylinderMesh_tower")
+material_override = SubResource("StandardMaterial3D_player")
+
+[node name="EnemyBarracks" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -8)
+script = ExtResource("3_barracks")
+team = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="EnemyBarracks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("CylinderMesh_barracks")
+material_override = SubResource("StandardMaterial3D_enemy")
+
+[node name="DebugOrbit" type="Node3D" parent="EnemyBarracks"]
+script = ExtResource("6_debug_orbit")
+enabled = true
+speed_rad_per_sec = 0.4
+radius = 4.0
+
+[node name="EnemyTower" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -5)
+script = ExtResource("4_tower")
+team = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="EnemyTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("CylinderMesh_tower")
+material_override = SubResource("StandardMaterial3D_enemy")
+
+[node name="BuildBar" type="CanvasLayer" parent="."]
+script = ExtResource("7_build_bar")
+
+[node name="Root" type="Control" parent="BuildBar"]
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -130.0
+offset_right = 200.0
+offset_bottom = -30.0
+
+[node name="Row" type="HBoxContainer" parent="BuildBar/Root"]
+anchor_left = 0.0
+anchor_right = 1.0
+anchor_top = 0.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+alignment = 1
+theme_override_constants/separation = 14
+
+[node name="TowerPill" type="Button" parent="BuildBar/Root/Row"]
+script = ExtResource("8_build_pill")
+building_type = &"tower"
+cooldown_total = 6.0
+start_remaining = 3.0
+
+[node name="BarracksPill" type="Button" parent="BuildBar/Root/Row"]
+script = ExtResource("8_build_pill")
+building_type = &"barracks"
+cooldown_total = 9.0
+start_remaining = 4.5
+
+[node name="PlacementController" type="Node" parent="."]
+script = ExtResource("9_placement")
+camera_path = NodePath("../CameraRig/Camera3D")
+build_bar_path = NodePath("../BuildBar")
